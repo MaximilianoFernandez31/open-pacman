@@ -1,6 +1,6 @@
 # SPEC 01 — Fantasmas clásicos y modo asustado
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Depends on:** —
 > **Date:** 2026-11-13
 > **Objective:** Implementar los 4 fantasmas clásicos de Pac-Man (Blinky, Pinky, Inky y Clyde) con IA propia, salida escalonada del pen y el modo asustado con power pellets.
