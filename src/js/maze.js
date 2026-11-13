@@ -2,6 +2,7 @@
 // Laberinto 28x31 fiel a la geometria del nivel 1 de Pac-Man.
 // Se escribe como 31 strings de 28 chars (legible) y se parsea a numeros.
 //   '#' pared(1) · '.' dot(2) · ' ' vacio transitable(0) · '-' puerta pen(3)
+//   'o' power pellet(4)
 // Coordenadas: celda (x,y), origen arriba-izquierda. x in [0,27], y in [0,30].
 // Simetrico respecto al eje vertical central (entre cols 13 y 14).
 
@@ -43,6 +44,7 @@ function parseTile( ch ) {
   if ( ch === '#' ) return 1;
   if ( ch === '.' ) return 2;
   if ( ch === '-' ) return 3;
+  if ( ch === 'o' ) return 4;
   return 0; // espacio = vacio transitable
 }
 
@@ -52,8 +54,10 @@ const MAZE = MAZE_STR.map( ( row ) => row.split( '' ).map( parseTile ) );
 const TUNNEL_ROW = 14;
 const PACMAN_START = { x: 13, y: 23 };
 const GHOST_STARTS = [
-  { x: 13, y: 14, kind: 'hunter' }, // dentro de la pen
-  { x: 14, y: 14, kind: 'random' }, // dentro de la pen
+  { x: 13, y: 11, kind: 'blinky' }, // fuera del pen
+  { x: 13, y: 14, kind: 'pinky' },  // pen
+  { x: 11, y: 14, kind: 'inky' },   // pen
+  { x: 16, y: 14, kind: 'clyde' },  // pen
 ];
 
 window.MAZE = MAZE;

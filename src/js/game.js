@@ -13,6 +13,9 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// Frames que cada fantasma espera dentro del pen antes de salir.
+const RELEASE_DELAYS = { blinky: 0, pinky: 120, inky: 240, clyde: 360 };
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -42,7 +45,11 @@ function createGame() {
       dir: 'up',
       speed: GHOST_SPEED,
       kind: g.kind,
+      released: g.kind === 'blinky',
+      releaseIn: RELEASE_DELAYS[ g.kind ],
+      respawnIn: 0,
     } ) ),
+    frightened: { active: false, timer: 0, combo: 0 },
   };
 }
 
