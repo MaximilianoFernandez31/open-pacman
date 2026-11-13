@@ -147,6 +147,7 @@ function drawHUD( ctx, game, W ) {
 }
 
 const GHOST_COLORS = [ '#ff0000', '#ffb8ff', '#00ffff', '#ffb852' ];
+const FRIGHTENED_COLOR = '#2121de';
 
 function draw( ctx, game, frame ) {
   const grid = game.grid;
@@ -160,7 +161,11 @@ function draw( ctx, game, frame ) {
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
-  game.ghosts.forEach( ( g, i ) => drawGhost( ctx, g, GHOST_COLORS[ i ] || '#ff0000' ) );
+  game.ghosts.forEach( ( g, i ) => {
+    if ( g.respawnIn > 0 ) return; // comido: oculto hasta renacer
+    const color = game.frightened.active ? FRIGHTENED_COLOR : GHOST_COLORS[ i ];
+    drawGhost( ctx, g, color );
+  } );
   drawHUD( ctx, game, W );
 }
 

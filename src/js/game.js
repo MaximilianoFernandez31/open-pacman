@@ -12,6 +12,10 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
+const FRIGHTENED_SPEED = 0.05; // 1/20 celda/frame
+const FRIGHTENED_FRAMES = 360; // 6s
+const RESPAWN_FRAMES = 180;    // 3s
+const RESPAWN_CELL = { x: 13, y: 14 }; // interior del pen
 
 // Frames que cada fantasma espera dentro del pen antes de salir.
 const RELEASE_DELAYS = { blinky: 0, pinky: 120, inky: 240, clyde: 360 };
@@ -107,6 +111,7 @@ function movePacman( game ) {
       grid[ p.y ][ p.x ] = 0;
       game.score += cell === 4 ? 50 : 10;
       game.dotsRemaining--;
+      if ( cell === 4 ) startFrightened( game );
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -150,6 +155,18 @@ function ghostTarget( game, g ) {
   }
 }
 
+// Modo asustado: activa el timer, resetea la racha e invierte a los activos.
+function startFrightened( game ) {
+  const f = game.frightened;
+  f.active = true;
+  f.timer = FRIGHTENED_FRAMES;
+  f.combo = 0;
+  game.ghosts.forEach( ( g ) => {
+    if ( g.respawnIn > 0 ) return; // oculto: no participa
+    g.dir = OPPOSITE[ g.dir ];
+  } );
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
 
@@ -161,6 +178,12 @@ function decideGhost( game, g ) {
 
   // No liberado: patrulla aleatoria dentro del pen.
   if ( !g.released ) {
+    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+    return;
+  }
+
+  // Asustado: camino al azar.
+  if ( game.frightened.active ) {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
     return;
   }
@@ -198,6 +221,15 @@ function moveGhost( game, g ) {
   wrapTunnel( g, width );
 }
 
+// Renace un fantasma comido: teletransporte al pen, sin animacion de ojos.
+function respawnGhost( g ) {
+  g.x = RESPAWN_CELL.x;
+  g.y = RESPAWN_CELL.y;
+  g.dir = 'up';
+  g.released = true;
+}
+
+// Reset tras perder una vida: posiciones, timers de salida y modo asustado.
 function resetPositions( game ) {
   const p = game.pacman;
   p.x = PACMAN_START.x;
@@ -208,7 +240,12 @@ function resetPositions( game ) {
     g.x = GHOST_STARTS[ i ].x;
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
+    g.released = g.kind === 'blinky';
+    g.releaseIn = RELEASE_DELAYS[ g.kind ];
+    g.respawnIn = 0;
+    g.speed = GHOST_SPEED;
   } );
+  game.frightened = { active: false, timer: 0, combo: 0 };
 }
 
 function collides( a, b ) {
@@ -216,6 +253,8 @@ function collides( a, b ) {
 }
 
 function update( game ) {
+  const f = game.frightened;
+
   // Cuenta atras de salida del pen para los fantasmas no liberados.
   game.ghosts.forEach( ( g ) => {
     if ( !g.released ) {
@@ -225,10 +264,39 @@ function update( game ) {
   } );
 
   movePacman( game );
-  game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
+
+  // Modo asustado: expiracion del timer.
+  if ( f.active ) {
+    f.timer--;
+    if ( f.timer <= 0 ) {
+      f.active = false;
+      f.timer = 0;
+      f.combo = 0;
+    }
+  }
+
+  game.ghosts.forEach( ( g ) => {
+    // Oculto tras ser comido: sin movimiento ni colision.
+    if ( g.respawnIn > 0 ) {
+      g.respawnIn--;
+      if ( g.respawnIn === 0 ) respawnGhost( g );
+      return;
+    }
+    // Velocidad segun modo (siempre 1/N celda/frame).
+    g.speed = f.active ? FRIGHTENED_SPEED : GHOST_SPEED;
+    moveGhost( game, g );
+  } );
 
   for ( const g of game.ghosts ) {
-    if ( collides( game.pacman, g ) ) {
+    if ( g.respawnIn > 0 ) continue;
+    if ( !collides( game.pacman, g ) ) continue;
+
+    if ( f.active ) {
+      // Pacman come al fantasma asustado: racha 200/400/800/1600.
+      game.score += 200 * Math.pow( 2, Math.min( f.combo, 3 ) );
+      f.combo++;
+      g.respawnIn = RESPAWN_FRAMES;
+    } else {
       game.lives--;
       if ( game.lives <= 0 ) {
         game.state = 'lost';
