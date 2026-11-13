@@ -1,0 +1,11 @@
+# spec workflow configuration
+#
+# AutoCreateBranch — controls whether /spec-impl creates the git branch automatically.
+#   true  (default) → /spec-impl creates and switches to spec-NN-slug without asking
+#   false           → /spec-impl asks for [y/N] confirmation before creating the branch
+AutoCreateBranch: true
+
+# AutoCommitSteps — controls whether /spec-impl commits each finished step.
+#   false (default) → /spec-impl never commits; committing is up to you
+#   true            → /spec-impl commits each step as spec-NN-step-MM
+AutoCommitSteps: false
