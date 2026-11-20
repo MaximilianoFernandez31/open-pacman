@@ -1,6 +1,10 @@
 # SPEC 02 — Salida forzada del pen para fantasmas liberados
 
+<<<<<<< HEAD
+> **Status:** Implemented
+=======
 > **Status:** Approved
+>>>>>>> 4ad3382512caab25b34c74b2a14f0446e3969f8f
 > **Depends on:** SPEC 01
 > **Date:** 2026-11-20
 > **Objective:** Que todo fantasma dentro del pen (liberado o renacido) salga siempre por la puerta hasta `(13,11)` con Pac-Man en cualquier posición, y que una vez fuera no pueda reentrar.
@@ -63,6 +67,13 @@ Convenciones: coordenadas de celda origen arriba-izquierda; todo en frames (60fp
 - **No:** flag `exited` por fantasma — la posición ya lo determina.
 - **No:** salir y luego divagar dentro del pen con frightened — se decidió salir primero (decisión explícita del usuario).
 
+<<<<<<< HEAD
+## Known issue (preexistente, fuera de alcance)
+
+- **Desalineamiento al cambiar de velocidad mid-cell:** si el modo frightened cambia la velocidad (`0.05` ↔ `0.1`) a mitad de celda, el fantasma queda en offsets tipo `y=2.95` y nunca vuelve a alinear con la rejilla → atraviesa paredes y puede salir del grid. Verificado contra `main`: reproduce sin estos cambios (no lo introduce SPEC 02). Pendiente de una spec futura; el criterio *"sin atravesar paredes"* se evalúa solo para los caminos afectados por esta spec (salida del pen), no para el bug global.
+
+=======
+>>>>>>> 4ad3382512caab25b34c74b2a14f0446e3969f8f
 ## Risks
 
 | Riesgo | Mitigación |

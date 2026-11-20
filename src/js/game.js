@@ -20,6 +20,14 @@ const RESPAWN_CELL = { x: 13, y: 14 }; // interior del pen
 // Frames que cada fantasma espera dentro del pen antes de salir.
 const RELEASE_DELAYS = { blinky: 0, pinky: 120, inky: 240, clyde: 360 };
 
+const PEN_BOX = { x1: 11, x2: 16, y1: 13, y2: 15 }; // interior del pen
+const PEN_EXIT = { x: 13, y: 11 }; // primera celda fuera de la puerta
+
+function inPen( g ) {
+  return g.x >= PEN_BOX.x1 && g.x <= PEN_BOX.x2 &&
+         g.y >= PEN_BOX.y1 && g.y <= PEN_BOX.y2;
+}
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -63,13 +71,16 @@ function aligned( v ) {
 
 // Una celda es muro para el actor dado?
 //   pacman: bloqueado por pared (1) y puerta (3)
-//   ghost:  bloqueado por pared (1); la puerta (3) solo si no esta liberado
+//   ghost:  bloqueado por pared (1); la puerta (3) solo si no esta
+//           liberado o esta fuera del pen (sin reentrada)
 function isWall( grid, x, y, actor ) {
   if ( y < 0 || y >= grid.length ) return true;
   if ( x < 0 || x >= grid[ 0 ].length ) return true;
   const v = grid[ y ][ x ];
   if ( v === 1 ) return true;
-  if ( v === 3 && ( actor === 'pacman' || actor.released === false ) ) return true;
+  if ( v === 3 && ( actor === 'pacman' || actor.released === false || !inPen( actor ) ) ) {
+    return true;
+  }
   return false;
 }
 
@@ -169,6 +180,17 @@ function startFrightened( game ) {
 
 function decideGhost( game, g ) {
   const grid = game.grid;
+
+  // Ruta forzada de salida del pen: primero la columna de PEN_EXIT, luego up.
+  // Ignora la exclusion del opuesto para no quedarse sin opciones.
+  if ( g.released && inPen( g ) ) {
+    const wants = g.x !== PEN_EXIT.x
+      ? ( g.x < PEN_EXIT.x ? 'right' : 'left' )
+      : 'up';
+    const free = Object.keys( DIRS ).filter( ( dir ) => canMove( grid, g.x, g.y, dir, g ) );
+    if ( free.length ) g.dir = free.includes( wants ) ? wants : free[ 0 ];
+    return;
+  }
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, g )
