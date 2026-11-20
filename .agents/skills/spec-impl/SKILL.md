@@ -1,247 +1,247 @@
 ---
 name: spec-impl
-description: Implements an approved spec. Validates that the state means "Approved" (in any language), creates a git branch named after the spec, switches to it, and starts the implementation step by step with pauses to review diffs.
+description: Implementa una spec aprobada. Valida que el estado signifique "Approved" (en cualquier idioma), crea una rama git con el nombre de la spec, cambia a ella e inicia la implementación paso a paso con pausas para revisar los diffs.
 disable-model-invocation: true
-argument-hint: <NN-spec-name>
+argument-hint: <NN-nombre-spec>
 allowed-tools: Read, Glob, Grep, Edit, Write, AskUserQuestion, Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*), Bash(git add:*), Bash(git commit:*), Bash(git show:*), Bash(cat:*), Bash(ls:*)
 ---
 
-# /spec-impl — Implementer of approved specs
+# /spec-impl — Implementador de specs aprobadas
 
-## Session context
+## Contexto de la sesión
 
-Current repository state:
+Estado actual del repositorio:
 !`git status --short`
 
-Current branch:
+Rama actual:
 !`git branch --show-current`
 
-Specs available in this folder:
-!`ls specs/ 2>/dev/null || echo "The specs/ folder does not exist"`
+Specs disponibles en esta carpeta:
+!`ls specs/ 2>/dev/null || echo "No existe la carpeta specs/"`
 
-Workflow config:
-!`cat specs/.spec-config.yml 2>/dev/null || echo "No config file — defaults apply: AutoCreateBranch: true, AutoCommitSteps: false"`
-
----
-
-## Instructions
-
-Follow these four phases in strict order. **Do not advance to the next phase if the previous one did not complete correctly.**
+Configuración del workflow:
+!`cat specs/.spec-config.yml 2>/dev/null || echo "Sin archivo de config — se aplican los valores por defecto: AutoCreateBranch: true, AutoCommitSteps: false"`
 
 ---
 
-### Phase 1 — Identify the spec
+## Instrucciones
 
-The received argument is: `$ARGUMENTS`
-
-If `$ARGUMENTS` is empty:
-
-- List the files available in `specs/` (you already have them above).
-- Ask the user to specify the exact name of the spec.
-- Stop and wait for an answer. Do not continue.
-
-If `$ARGUMENTS` has a value:
-
-- Look for the file in `specs/`. The user may have written the full name (`01-mvp-arkanoid`), only the number (`01`), or only the slug (`mvp-arkanoid`). Try to find the correct file in any of those cases.
-- If you do not find the file, show the available specs and ask the user to correct the name.
-- If you do find it, continue to Phase 2.
+Sigue estas cuatro fases en orden estricto. **No pases a la fase siguiente si la anterior no se completó correctamente.**
 
 ---
 
-### Phase 2 — Validate the spec's state
+### Fase 1 — Identificar la spec
 
-Read the spec file you located in Phase 1 using the Read tool or `cat`.
+El argumento recibido es: `$ARGUMENTS`
 
-In the file's contents, look for the line that contains the spec's state. The header label is typically `**Status:**` (English) or `**Estado:**` (Spanish), but it may use any language. Match by position (status line near the top of the spec) and by the surrounding state machine, not by the exact label.
+Si `$ARGUMENTS` está vacío:
 
-**Absolute rule:** You can only continue if the state **means "Approved"** — regardless of the language used.
+- Lista los archivos disponibles en `specs/` (ya los tienes arriba).
+- Pide al usuario que especifique el nombre exacto de la spec.
+- Detente y espera la respuesta. No continúes.
 
-Treat any of the following (and their equivalents in other languages) as the **Approved** state and continue:
+Si `$ARGUMENTS` tiene un valor:
 
-- English: `Approved`
-- Spanish: `Aprobado`
-- Portuguese: `Aprovado`
-- French: `Approuvé`
-- German: `Genehmigt`
-- Italian: `Approvato`
-- …or any other language's word that clearly means "approved"
+- Busca el archivo en `specs/`. El usuario puede haber escrito el nombre completo (`01-mvp-arkanoid`), solo el número (`01`) o solo el slug (`mvp-arkanoid`). Intenta encontrar el archivo correcto en cualquiera de esos casos.
+- Si no encuentras el archivo, muestra las specs disponibles y pide al usuario que corrija el nombre.
+- Si lo encuentras, continúa a la Fase 2.
 
-Anything else (Draft / Borrador, In review / En revisión, Implemented / Implementado, Obsolete / Obsoleto, or any unrecognized value) means **stop** and show the error message below.
+---
 
-| State category                            | Examples (any language)                           | Action                                                                     |
-| ----------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------- |
-| Approved                                  | `Approved`, `Aprobado`, `Aprovado`, `Approuvé`, … | Continue to Phase 3.                                                       |
-| Draft                                     | `Draft`, `Borrador`, …                            | Stop. Show the error message below.                                        |
-| In review                                 | `In review`, `En revisión`, …                     | Stop. Show the error message below.                                        |
-| Implemented                               | `Implemented`, `Implementado`, …                  | Stop. Show the error message below.                                        |
-| Obsolete                                  | `Obsolete`, `Obsoleto`, …                         | Stop. Show the error message below.                                        |
-| State line not found / unrecognized value | —                                                 | Stop. The file does not follow the expected format. Tell this to the user. |
+### Fase 2 — Validar el estado de la spec
 
-If you are unsure whether a value means "approved", **do not assume**. Stop and ask the user to clarify or to update the spec to the canonical wording.
+Lee el archivo de spec que localizaste en la Fase 1 con la herramienta Read o `cat`.
 
-**Standard error message when the state does not mean Approved:**
+En el contenido del archivo, busca la línea que contiene el estado de la spec. La etiqueta del encabezado suele ser `**Status:**` (inglés) o `**Estado:**` (español), pero puede estar en cualquier idioma. Haz coincidir por posición (la línea de estado cerca del inicio de la spec) y por la máquina de estados que la rodea, no por la etiqueta exacta.
+
+**Regla absoluta:** Solo puedes continuar si el estado **significa "Approved"** — sin importar el idioma usado.
+
+Trata cualquiera de los siguientes (y sus equivalentes en otros idiomas) como el estado **Approved** y continúa:
+
+- Inglés: `Approved`
+- Español: `Aprobado`
+- Portugués: `Aprovado`
+- Francés: `Approuvé`
+- Alemán: `Genehmigt`
+- Italiano: `Approvato`
+- …o cualquier palabra en otro idioma que signifique claramente "aprobado"
+
+Cualquier otra cosa (Draft / Borrador, In review / En revisión, Implemented / Implementado, Obsolete / Obsoleto, o cualquier valor no reconocido) significa **detenerse** y mostrar el mensaje de error de abajo.
+
+| Categoría de estado                    | Ejemplos (cualquier idioma)                      | Acción                                                                    |
+| --------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| Approved                                | `Approved`, `Aprobado`, `Aprovado`, `Approuvé`, … | Continuar a la Fase 3.                                                    |
+| Draft                                   | `Draft`, `Borrador`, …                           | Detenerse. Mostrar el mensaje de error de abajo.                          |
+| In review                               | `In review`, `En revisión`, …                    | Detenerse. Mostrar el mensaje de error de abajo.                          |
+| Implemented                             | `Implemented`, `Implementado`, …                 | Detenerse. Mostrar el mensaje de error de abajo.                          |
+| Obsolete                                | `Obsolete`, `Obsoleto`, …                        | Detenerse. Mostrar el mensaje de error de abajo.                          |
+| Línea de estado no encontrada / valor no reconocido | —                                        | Detenerse. El archivo no sigue el formato esperado. Comunícaselo al usuario. |
+
+Si no estás seguro de que un valor signifique "aprobado", **no asumas**. Detente y pide al usuario que aclare o que actualice la spec a la redacción canónica.
+
+**Mensaje de error estándar cuando el estado no significa Approved:**
 
 ```
-❌ I cannot implement this spec.
+❌ No puedo implementar esta spec.
 
-Current state: [STATE FOUND]
-I only work with specs whose state means "Approved" (e.g. `Approved`, `Aprobado`,
-or the equivalent in another language).
+Estado actual: [ESTADO ENCONTRADO]
+Solo trabajo con specs cuyo estado significa "Approved" (p. ej. `Approved`, `Aprobado`,
+o el equivalente en otro idioma).
 
-To continue you have two options:
-  1. If the spec is ready to be implemented, open it and change the state
-     to "Approved" (or the equivalent term your team uses) manually.
-     That change is made by the human, not the agent.
-  2. If the spec still needs work, use /spec [name] to resume it.
+Para continuar tienes dos opciones:
+  1. Si la spec está lista para implementarse, ábrela y cambia el estado
+     a "Approved" (o el término equivalente que use tu equipo) manualmente.
+     Ese cambio lo hace el humano, no el agente.
+  2. Si la spec todavía necesita trabajo, usa /spec [nombre] para retomarla.
 ```
 
-Do not offer alternatives, do not suggest "I can still start if you want". The block is intentional.
+No ofrezcas alternativas, no sugieras "aún puedo empezar si quieres". El bloqueo es intencionado.
 
 ---
 
-### Phase 3 — Create the git branch and switch to it
+### Fase 3 — Crear la rama git y cambiar a ella
 
-Once you have confirmed the state means `Approved`:
+Una vez confirmado que el estado significa `Approved`:
 
-0. **Check the working tree first.** Look at the `git status --short` output in the session context above. If it is **not empty**, stop and show the pending changes, then ask:
-
-   ```
-   ⚠️ There are uncommitted changes in the working tree.
-   Switching branches would carry them over. What do you want to do?
-     1. Commit or stash them yourself, then re-run this command  (recommended)
-     2. Continue anyway — the changes travel to the new branch
-   ```
-
-   Wait for the answer. **Do not stash or commit on the user's behalf** unless they explicitly ask for it. If the working tree is clean, skip straight to step 1 without mentioning it.
-
-1. Derive the branch name from the spec file's full name, without the extension. Format: `spec-NN-slug`. Examples:
-
-   - `01-mvp-arkanoid.md` → branch `spec-01-mvp-arkanoid`
-   - `02-powerups.md` → branch `spec-02-powerups`
-
-2. Read the `AutoCreateBranch` flag from the **Workflow config** shown in the session context above.
-
-   - If the config file does not exist, the value is missing, or the value is unrecognized → treat it as `true` (the default).
-   - Only an explicit `false` (in any capitalization) disables automatic branch creation.
-
-   **If `AutoCreateBranch` is `true` (default):** proceed without asking.
-
-   - If the branch **does not exist**: create it with `git checkout -b spec-NN-slug`.
-   - If it **already exists**: this means previous work is being resumed. Switch to it, read `git log --oneline` on the branch, and tell the user which steps of the plan already look done and which step you propose to resume from. Commits named `spec-NN-step-MM` (created when `AutoCommitSteps` is `true`) mark exactly which steps are finished. Wait for confirmation on the resume point before implementing anything.
-   - In both cases: switch to the branch with `git checkout spec-NN-slug` and confirm the change was successful before continuing.
-
-   **If `AutoCreateBranch` is `false`:** ask before touching git. Show:
+0. **Comprueba primero el árbol de trabajo.** Mira la salida de `git status --short` en el contexto de la sesión de arriba. Si **no está vacío**, detente y muestra los cambios pendientes, y luego pregunta:
 
    ```
-   AutoCreateBranch is set to false.
-   Create and switch to the branch spec-NN-slug? [y/N]
+   ⚠️ Hay cambios sin commit en el árbol de trabajo.
+   Cambiar de rama los arrastraría. ¿Qué quieres hacer?
+     1. Hacerles commit o stash tú mismo, y luego re-ejecutar este comando  (recomendado)
+     2. Continuar de todos modos — los cambios viajan a la nueva rama
    ```
 
-   - If the user answers **yes**: create/switch to the branch exactly as in the `true` case above.
-   - If the user answers **no** or leaves it empty: **do not create any branch.** Tell the user you will implement on the current branch (the one shown in the session context above) and ask for explicit confirmation to continue there. Do not improvise — wait for the answer.
+   Espera la respuesta. **No hagas stash ni commit en nombre del usuario** salvo que lo pida explícitamente. Si el árbol de trabajo está limpio, salta directo al paso 1 sin mencionarlo.
 
-3. Visually confirm to the user the spec is ready and which branch is active:
+1. Deriva el nombre de la rama del nombre completo del archivo de la spec, sin la extensión. Formato: `spec-NN-slug`. Ejemplos:
+
+   - `01-mvp-arkanoid.md` → rama `spec-01-mvp-arkanoid`
+   - `02-powerups.md` → rama `spec-02-powerups`
+
+2. Lee el flag `AutoCreateBranch` de la **Configuración del workflow** mostrada en el contexto de la sesión de arriba.
+
+   - Si el archivo de config no existe, el valor falta o el valor no se reconoce → trátalo como `true` (el valor por defecto).
+   - Solo un `false` explícito (en cualquier combinación de mayúsculas) desactiva la creación automática de la rama.
+
+   **Si `AutoCreateBranch` es `true` (por defecto):** procede sin preguntar.
+
+   - Si la rama **no existe**: créala con `git checkout -b spec-NN-slug`.
+   - Si **ya existe**: esto significa que se está reanudando trabajo anterior. Cámbiate a ella, lee `git log --oneline` en la rama y dile al usuario qué pasos del plan ya parecen hechos y desde qué paso propones reanudar. Los commits con nombre `spec-NN-step-MM` (creados cuando `AutoCommitSteps` es `true`) marcan exactamente qué pasos están terminados. Espera confirmación del punto de reanudación antes de implementar nada.
+   - En ambos casos: cámbiate a la rama con `git checkout spec-NN-slug` y confirma que el cambio fue exitoso antes de continuar.
+
+   **Si `AutoCreateBranch` es `false`:** pregunta antes de tocar git. Muestra:
 
    ```
-   ✅ Ready to implement.
+   AutoCreateBranch está configurado en false.
+   ¿Crear y cambiar a la rama spec-NN-slug? [y/N]
+   ```
+
+   - Si el usuario responde **sí**: crea/cámbiate a la rama exactamente como en el caso `true` de arriba.
+   - Si el usuario responde **no** o lo deja vacío: **no crees ninguna rama.** Dile al usuario que implementarás en la rama actual (la que muestra el contexto de la sesión de arriba) y pídele confirmación explícita para continuar ahí. No improvises — espera la respuesta.
+
+3. Confirma visualmente al usuario que la spec está lista y qué rama está activa:
+
+   ```
+   ✅ Listo para implementar.
 
    Spec:   specs/NN-slug.md
-   Branch: spec-NN-slug  (active)   (← or the current branch, if no new branch was created)
-   State:  Approved   (← echo back the actual value found in the spec)
+   Rama:   spec-NN-slug  (activa)   (← o la rama actual, si no se creó ninguna nueva)
+   Estado: Approved   (← repite el valor real encontrado en la spec)
    ```
 
-4. **Do not start implementing yet.** First show the spec summary to the user so they have it fresh. Extract and show:
-   - The **objective** (the line after `**Objective:**` / `**Objetivo:**` / equivalent label).
-   - The **scope** (the `## Scope` / `## Alcance` / equivalent section).
-   - The **implementation plan** (the section with the numbered steps — `## Implementation plan` / `## Plan de implementación` / equivalent).
-   - The **acceptance criteria** (the checklist — `## Acceptance criteria` / `## Criterios de aceptación` / equivalent).
+4. **Todavía no empieces a implementar.** Primero muestra el resumen de la spec al usuario para que lo tenga fresco. Extrae y muestra:
+   - El **objetivo** (la línea tras `**Objective:**` / `**Objetivo:**` o la etiqueta equivalente).
+   - El **alcance** (la sección `## Scope` / `## Alcance` o equivalente).
+   - El **plan de implementación** (la sección con los pasos numerados — `## Implementation plan` / `## Plan de implementación` o equivalente).
+   - Los **criterios de aceptación** (el checklist — `## Acceptance criteria` / `## Criterios de aceptación` o equivalente).
 
-Match section headings by meaning, not by exact wording — the spec may be authored in any language.
-
----
-
-### Phase 4 — Implement step by step
-
-After showing the spec summary, tell the user:
-
-```
-I am going to implement the spec following the implementation plan exactly.
-I will pause after each step so you can review the diff.
-Each step will be committed as spec-NN-step-MM.   (← only if AutoCommitSteps is true)
-
-Shall we start with Step 1?
-```
-
-Wait for explicit confirmation ("yes", "go ahead", "go", or equivalent). Do not start without it.
-
-Once confirmed, follow these rules during the entire implementation:
-
-**Committing is controlled by the `AutoCommitSteps` flag** in the **Workflow config** shown in the session context above. If the config file does not exist, the value is missing, or the value is unrecognized → treat it as `false` (the default). Only an explicit `true` (in any capitalization) enables per-step commits.
-
-- **`AutoCommitSteps: false` (default) — never commit automatically.** Not per step, not at the end. You write the code and show the diff; committing is the user's decision and the user's command. Only commit if they explicitly ask you to.
-- **`AutoCommitSteps: true` — commit each step as soon as it is finished**, before pausing for review:
-  - Stage only the files you created, modified or deleted in this step: `git add -- <file> <file> …`. Never use `git add -A` or `git add .` — they could sweep in changes that do not belong to the step.
-  - Commit with the message `spec-NN-step-MM` and nothing else (no description, no body). `NN` is the spec number and `MM` is the step number from the implementation plan, both zero-padded to two digits. Example: step 3 of `01-mvp-arkanoid.md` → `spec-01-step-03`.
-  - If the user asks for adjustments to the step while reviewing it, apply them and fold them into the same commit (`git add -- <files>` + `git commit --amend --no-edit`), so each step stays a single commit. Only ever amend the commit of the step currently under review, never an earlier one.
-  - If the commit fails (e.g. a pre-commit hook rejects it), stop and show the error. Never bypass hooks with `--no-verify`.
-  - Never push.
-
-**One rule above all:** implement what the spec says. If something in the spec looks suboptimal to you, mention it as an observation but implement what was agreed. Changes to the spec go into the spec, not into the code by surprise.
-
-**Work rhythm:**
-
-- Implement one step of the plan.
-- If `AutoCommitSteps` is `true`, commit the step as described above.
-- Show a summary of which files you touched and what you did. If you committed, add the commit line: `Committed as spec-NN-step-MM (<short hash>)` — the user can review it with `git show HEAD`.
-- Say: `Step N completed. Could you review the diff and let me know if I continue with Step N+1?`
-- Wait for confirmation before continuing.
-
-**If during the implementation you find an ambiguity** the spec does not resolve:
-
-- Stop.
-- Describe the ambiguity exactly.
-- Present two or three concrete options.
-- Wait for the user's decision.
-- Do not improvise.
-
-**If the user asks for something that is out of the spec's scope:**
-
-- Remind them that it is out of this spec's scope.
-- Suggest noting it down for the next spec.
-- Do not implement it on this branch.
-
-**When finishing the last step:**
-
-```
-✅ All steps of the plan are implemented.
-
-Next step: verify the spec's acceptance criteria one by one.
-If they all pass, update the spec's state to "Implemented" (or the equivalent
-in your repo's language) and make the final commit before merging this branch.
-```
+Haz coincidir los títulos de sección por significado, no por redacción exacta — la spec puede estar escrita en cualquier idioma.
 
 ---
 
-## Summary of expected behavior
+### Fase 4 — Implementar paso a paso
+
+Tras mostrar el resumen de la spec, dile al usuario:
+
+```
+Voy a implementar la spec siguiendo el plan de implementación exactamente.
+Me pausaré después de cada paso para que revises el diff.
+Cada paso se hará commit como spec-NN-step-MM.   (← solo si AutoCommitSteps es true)
+
+¿Empezamos con el Paso 1?
+```
+
+Espera confirmación explícita ("sí", "adelante", "va" o equivalente). No empieces sin ella.
+
+Una vez confirmado, sigue estas reglas durante toda la implementación:
+
+**Los commits los controla el flag `AutoCommitSteps`** en la **Configuración del workflow** mostrada en el contexto de la sesión de arriba. Si el archivo de config no existe, el valor falta o el valor no se reconoce → trátalo como `false` (el valor por defecto). Solo un `true` explícito (en cualquier combinación de mayúsculas) activa los commits por paso.
+
+- **`AutoCommitSteps: false` (por defecto) — nunca hagas commit automáticamente.** Ni por paso, ni al final. Tú escribes el código y muestras el diff; hacer commit es decisión y orden del usuario. Haz commit solo si te lo pide explícitamente.
+- **`AutoCommitSteps: true` — haz commit de cada paso en cuanto esté terminado**, antes de pausar para la revisión:
+  - Selecciona solo los archivos que creaste, modificaste o borraste en este paso: `git add -- <file> <file> …`. Nunca uses `git add -A` ni `git add .` — podrían arrastrar cambios que no pertenecen al paso.
+  - Haz commit con el mensaje `spec-NN-step-MM` y nada más (sin descripción, sin cuerpo). `NN` es el número de la spec y `MM` es el número del paso del plan de implementación, ambos con relleno de cero a dos dígitos. Ejemplo: paso 3 de `01-mvp-arkanoid.md` → `spec-01-step-03`.
+  - Si el usuario pide ajustes al paso mientras lo revisa, aplícalos e intégralos en el mismo commit (`git add -- <files>` + `git commit --amend --no-edit`), para que cada paso siga siendo un solo commit. Haz amend solo nunca al commit del paso que se está revisando actualmente, nunca a uno anterior.
+  - Si el commit falla (p. ej. un hook pre-commit lo rechaza), detente y muestra el error. Nunca saltes los hooks con `--no-verify`.
+  - Nunca hagas push.
+
+**Una regla por encima de todas:** implementa lo que dice la spec. Si algo de la spec te parece subóptimo, menciónalo como observación pero implementa lo acordado. Los cambios a la spec van en la spec, no en el código por sorpresa.
+
+**Ritmo de trabajo:**
+
+- Implementa un paso del plan.
+- Si `AutoCommitSteps` es `true`, haz commit del paso como se describió arriba.
+- Muestra un resumen de qué archivos tocaste y qué hiciste. Si hiciste commit, añade la línea de commit: `Committed as spec-NN-step-MM (<hash corto>)` — el usuario puede revisarlo con `git show HEAD`.
+- Di: `Paso N completado. ¿Podrías revisar el diff y decirme si continúo con el Paso N+1?`
+- Espera la confirmación antes de continuar.
+
+**Si durante la implementación encuentras una ambigüedad** que la spec no resuelve:
+
+- Detente.
+- Describe la ambigüedad exactamente.
+- Presenta dos o tres opciones concretas.
+- Espera la decisión del usuario.
+- No improvises.
+
+**Si el usuario pide algo que está fuera del alcance de la spec:**
+
+- Recuérdale que está fuera del alcance de esta spec.
+- Sugiere apuntarlo para la siguiente spec.
+- No lo implementes en esta rama.
+
+**Al terminar el último paso:**
+
+```
+✅ Todos los pasos del plan están implementados.
+
+Siguiente paso: verificar los criterios de aceptación de la spec uno por uno.
+Si todos pasan, actualiza el estado de la spec a "Implemented" (o el equivalente
+en el idioma de tu repo) y haz el commit final antes de fusionar esta rama.
+```
+
+---
+
+## Resumen del comportamiento esperado
 
 ```
 /spec-impl 01-mvp-arkanoid
 
-  Phase 1  →  Finds specs/01-mvp-arkanoid.md
-  Phase 2  →  Reads the state → "Approved" (or "Aprobado", etc.) → ✅ continues
-  Phase 3  →  git checkout -b spec-01-mvp-arkanoid → git checkout spec-01-mvp-arkanoid
-              Shows objective, scope, plan and criteria
-  Phase 4  →  Implements step by step with pauses
-              Ends by reminding to verify the acceptance criteria
+  Fase 1  →  Encuentra specs/01-mvp-arkanoid.md
+  Fase 2  →  Lee el estado → "Approved" (o "Aprobado", etc.) → ✅ continúa
+  Fase 3  →  git checkout -b spec-01-mvp-arkanoid → git checkout spec-01-mvp-arkanoid
+              Muestra objetivo, alcance, plan y criterios
+  Fase 4  →  Implementa paso a paso con pausas
+              Termina recordando verificar los criterios de aceptación
 
-/spec-impl 02-powerups  (state: Draft / Borrador)
+/spec-impl 02-powerups  (estado: Draft / Borrador)
 
-  Phase 1  →  Finds specs/02-powerups.md
-  Phase 2  →  Reads the state → "Draft" → ❌ stops
-              Shows the standard error message
-              Does not create branch, does not touch code
+  Fase 1  →  Encuentra specs/02-powerups.md
+  Fase 2  →  Lee el estado → "Draft" → ❌ se detiene
+              Muestra el mensaje de error estándar
+              No crea rama, no toca código
 ```
 
-**Branch creation is controlled by the `AutoCreateBranch` flag** in `specs/.spec-config.yml`. It defaults to `true` (create the branch automatically, as shown above). Set it to `false` to make Phase 3 ask `[y/N]` before creating the branch.
+**La creación de ramas la controla el flag `AutoCreateBranch`** en `specs/.spec-config.yml`. Por defecto es `true` (crea la rama automáticamente, como se muestra arriba). Cámbialo a `false` para que la Fase 3 pregunte `[y/N]` antes de crear la rama.
 
-**Per-step commits are controlled by the `AutoCommitSteps` flag** in the same file. It defaults to `false` (never commit). Set it to `true` to make Phase 4 commit each finished step as `spec-NN-step-MM`.
+**Los commits por paso los controla el flag `AutoCommitSteps`** en el mismo archivo. Por defecto es `false` (nunca hacer commit). Cámbialo a `true` para que la Fase 4 haga commit de cada paso terminado como `spec-NN-step-MM`.
